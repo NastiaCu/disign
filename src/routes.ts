@@ -3,6 +3,7 @@ import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Login from "./pages/Login";
 import {FC} from "react";
+import FileUploadPage from "./pages/FileUploadPage";
 
 interface Route {
     key: string,
@@ -33,6 +34,13 @@ export const routes: Array<Route> = [
         path: '/products',
         enabled: true,
         component: FAQ
+    },
+    {
+        key: 'file_upload-route',
+        title: 'Upload File',
+        path: '/file_upload',
+        enabled: true,
+        component: FileUploadPage
     },
     {
         key: 'login-route',

@@ -26,7 +26,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box height="100vh" display="flex" flexDirection="column" sx={{ backgroundColor: "primary.main"}}>
+      <Box 
+        height="100vh" 
+        display="flex" 
+        flexDirection="column" 
+        sx={{ backgroundColor: theme.palette.primary.main,}}>
         <Router>
           <Navbar />
           <Routes>

@@ -28,10 +28,7 @@ const Login: FC = (): ReactElement => {
     showPassword: false,
   });
 
-  const handleChange = (
-    prop: keyof State,
-    value: string | boolean
-  ): void => {
+  const handleChange = (prop: keyof State, value: string | boolean): void => {
     setFormState({ ...formState, [prop]: value });
   };
 
@@ -45,129 +42,177 @@ const Login: FC = (): ReactElement => {
     event.preventDefault();
   };
 
-  const handleFormSubmit = (event: React.FormEvent) => {
+  const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log(formState.email, formState.password);
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formState.email,
+          password: formState.password,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const authToken = data.token;
+        
+        localStorage.setItem('token', authToken);
+
+
+      } else {
+        // Handle login failure, show an error message, etc.
+      }
+    } catch (error) {
+      // Handle network or server errors.
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+        },
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('token');
+
+      } else {
+        
+      }
+    } catch (error) {
+      
+    }
   };
 
   return (
     <Container fixed maxWidth="xs">
-        <Box
-            sx={{
-            mt: "10px",
-            mx: "auto", 
-            width: 500,
-            height: 600,
-            justifyContent: "center",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            bgcolor: "primary.light",
-            borderRadius: "2rem",
-            boxShadow: 1,
-            color: "primary.contrastText",
-            }}
-        >
-            <Box sx={{ mx: "auto", my: "0.5rem", alignItems: "left", justifyContent: "left" }}>
-            <h1>Log In</h1>
-            </Box>
-
-            <form onSubmit={handleFormSubmit}>
-            <Box sx={{ mb: 1, color: "primary.contrastText", display: "flex", flexWrap: "wrap" }}>
-                <TextField
-                variant="outlined"
-                label="Email"
-                type="text"
-                autoComplete="Email"
-                autoFocus
-                margin="normal"
-                sx={{
-                    width: "400px",
-                    bgcolor: "primary.contrastText",
-                    borderRadius: "0.3rem",
-                }}
-                value={formState.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                style={{
-                    color: "primary.contrastText",
-                }}
-                InputLabelProps={{
-                    style: {
-                    color: "primary.contrastText",
-                    },
-                }}
-                InputProps={{
-                    style: {
-                    color: "primary.contrastText",
-                    },
-                }}
-                />
-            </Box>
-
-            <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-                <FormControl
-                sx={{
-                    width: "400px",
-                    backgroundColor: "primary.contrastText",
-                    borderRadius: "0.3rem",
-                }}
-                variant="outlined"
-                >
-                <InputLabel htmlFor="outlined-adornment-password" size="normal" style={{ color: "primaty.main" }}>
-                    Password
-                </InputLabel>
-                <OutlinedInput
-                    style={{ color: "primaty.contrastText" }}
-                    label="Password"
-                    id="outlined-adornment-password"
-                    type={formState.showPassword ? "text" : "password"}
-                    value={formState.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    endAdornment={
-                    <InputAdornment position="end">
-                        <IconButton
-                        style={{
-                            color: "primary.main",
-                        }}
-                        aria-label="toggle password visibility"
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                        >
-                        {formState.showPassword ? <VisibilityOff style={{ color: "primaty.main" }}/> : <Visibility />}
-                        </IconButton>
-                    </InputAdornment>
-                    }
-                />
-                </FormControl>
-            </Box>
-
-            <FormGroup>
-                <FormControlLabel
-                control={
-                    <Checkbox
-                    sx={{
-                        position: "inherited",
-                        color: "primary.main",
-                        "&.Mui-checked": {
-                        color: "primary.main",
-                        },
-                    }}
-                    checked={formState.showPassword}
-                    onChange={() => handleChange("showPassword", !formState.showPassword)}
-                    />
-                }
-                label="Show Password"
-                />
-            </FormGroup>
-
-            <Button type="submit" variant="contained" sx={{ my: "1rem", color: "primary.contrastText", textTransform: "none" }}>
-                Log In
-            </Button>
-
-            <Button sx={{ my: "1rem", color: "primary.contrastText", textTransform: "none" }}>Forgot your password?</Button>
-            </form>
+      <Box
+        sx={{
+          mt: "10px",
+          mx: "auto",
+          width: 500,
+          height: 600,
+          justifyContent: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          bgcolor: "primary.light",
+          borderRadius: "2rem",
+          boxShadow: 1,
+          color: "primary.contrastText",
+        }}
+      >
+        <Box sx={{ mx: "auto", my: "0.5rem", alignItems: "left", justifyContent: "left" }}>
+          <h1>Log In</h1>
         </Box>
+
+        <form onSubmit={handleFormSubmit}>
+          <Box sx={{ mb: 1, color: "primary.contrastText", display: "flex", flexWrap: "wrap" }}>
+            <TextField
+              variant="outlined"
+              label="Email"
+              type="text"
+              autoComplete="Email"
+              autoFocus
+              margin="normal"
+              sx={{
+                width: "400px",
+                bgcolor: "primary.contrastText",
+                borderRadius: "0.3rem",
+              }}
+              value={formState.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              style={{
+                color: "primary.contrastText",
+              }}
+              InputLabelProps={{
+                style: {
+                  color: "primary.contrastText",
+                },
+              }}
+              InputProps={{
+                style: {
+                  color: "primary.contrastText",
+                },
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+            <FormControl
+              sx={{
+                width: "400px",
+                backgroundColor: "primary.contrastText",
+                borderRadius: "0.3rem",
+              }}
+              variant="outlined"
+            >
+              <InputLabel htmlFor="outlined-adornment-password" size="normal" style={{ color: "primaty.main" }}>
+                Password
+              </InputLabel>
+              <OutlinedInput
+                style={{ color: "primaty.contrastText" }}
+                label="Password"
+                id="outlined-adornment-password"
+                type={formState.showPassword ? "text" : "password"}
+                value={formState.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      style={{
+                        color: "primary.main",
+                      }}
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {formState.showPassword ? <VisibilityOff style={{ color: "primaty.main" }}/> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </FormControl>
+          </Box>
+
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  sx={{
+                    position: "inherited",
+                    color: "primary.main",
+                    "&.Mui-checked": {
+                      color: "primary.main",
+                    },
+                  }}
+                  checked={formState.showPassword}
+                  onChange={() => handleChange("showPassword", !formState.showPassword)}
+                />
+              }
+              label="Show Password"
+            />
+          </FormGroup>
+
+          {localStorage.getItem('token') ? (
+            <Button onClick={handleLogout} variant="contained" sx={{ my: "1rem", color: "primary.contrastText", textTransform: "none" }}>
+              Logout
+            </Button>
+          ) : (
+            <Button type="submit" variant="contained" sx={{ my: "1rem", color: "primary.contrastText", textTransform: "none" }}>
+              Log In
+            </Button>
+          )}
+        </form>
+      </Box>
     </Container>
   );
 };

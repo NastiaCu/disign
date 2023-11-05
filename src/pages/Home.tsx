@@ -1,6 +1,7 @@
 import React, {ReactElement, FC} from "react";
 import {Box, Button, Typography} from "@mui/material";
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import { Link } from "react-router-dom"
 
 const Home: FC<any> = (): ReactElement => {
     return (
@@ -18,7 +19,7 @@ const Home: FC<any> = (): ReactElement => {
                 Traditional paper-based document signing processes are often time-consuming, costly, and environmentally unsustainable. Moreover, the rise of remote work and the need for contactless transactions have accelerated the demand for reliable digital signature solutions. Existing digital signing platforms may lack robust security measures or fail to provide a pleasant user experience. Moreover, all of them require a paid account in order to sign documents digitally.
             </Typography>
 
-            <Button type="submit" variant="contained" 
+            <Button type="submit" variant="contained" component= {Link} to="./Login"
                 sx={{
                     my: "1rem", 
                     color: "primary.contrastText", 
