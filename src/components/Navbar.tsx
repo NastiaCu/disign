@@ -13,6 +13,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import { routes } from "../routes";
 import { NavLink } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const Navbar: FC = (): ReactElement => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -39,7 +40,7 @@ const Navbar: FC = (): ReactElement => {
         <Toolbar disableGutters >
             <IconButton>
                 <NavLink to="/" style={{ textDecoration: "none" }}>
-                     <img src="../logo.png" alt="logo" width="auto" height="auto" /> 
+                     <img src={logo} alt="logo" width="auto" height="30px" /> 
                 </NavLink>
             </IconButton>
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" }, borderRadius: "2rem" }}>

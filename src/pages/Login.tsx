@@ -45,7 +45,7 @@ const Login: FC = (): ReactElement => {
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('http://localhost:3001/api/v1/user/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ const Login: FC = (): ReactElement => {
         const authToken = data.token;
         
         localStorage.setItem('token', authToken);
-
+        console.log("Success!!");
 
       } else {
         // Handle login failure, show an error message, etc.
