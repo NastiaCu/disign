@@ -20,7 +20,7 @@ interface State {
   email: string;
   password: string;
   showPassword: boolean;
-  nickname: string;
+  name: string;
 }
 
 const Register: FC = (): ReactElement => {
@@ -30,7 +30,7 @@ const Register: FC = (): ReactElement => {
     email: "",
     password: "",
     showPassword: false,
-    nickname: "",
+    name: "",
   });
 
   const handleChange = (prop: keyof State, value: string | boolean): void => {
@@ -58,7 +58,7 @@ const Register: FC = (): ReactElement => {
         body: JSON.stringify({
           email: formState.email,
           password: formState.password,
-          nickname: formState.nickname,
+          name: formState.name,
         }),
       });
 
@@ -77,45 +77,6 @@ const Register: FC = (): ReactElement => {
       // Handle network or server errors.
     }
   };
-  
-    const checkUserAccount = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/v1/user/signup', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, 
-          },
-        });
-
-        if (response.ok) {
-          // User has an account, redirect to login page
-          
-        } else {
-            const response = await fetch('http://localhost:3001/api/v1/user/signup', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: formState.email,
-                  password: formState.password,
-                  nickname: formState.nickname,
-                }),
-              });
-        
-              if (response.ok) {
-                const data = await response.json();
-                const authToken = data.token;
-                
-                localStorage.setItem('token', authToken);
-                console.log("Registration successful!");
-                setIsLoggedIn(true);
-              }
-            }
-        } catch (error) {
-          // Handle network or server errors.
-        }
-      };
 
   return (
         <Container fixed maxWidth="sm" sx ={{ padding: "20px"}}>
@@ -154,8 +115,8 @@ const Register: FC = (): ReactElement => {
                         bgcolor: "primary.contrastText",
                         borderRadius: "0.3rem",
                     }}
-                    value={formState.nickname}
-                    onChange={(e) => handleChange("nickname", e.target.value)}
+                    value={formState.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
                     InputLabelProps={{
                       style: { color: "primary.contrastText" },
                     }}
