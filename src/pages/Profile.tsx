@@ -1,7 +1,7 @@
 import React, {ReactElement, FC} from "react";
 import {Box, Typography} from "@mui/material";
 
-const FAQ: FC<any> = (): ReactElement => {
+const Profile: FC<any> = (): ReactElement => {
     return (
         <Box sx={{
             flexGrow: 1,
@@ -9,9 +9,9 @@ const FAQ: FC<any> = (): ReactElement => {
             justifyContent: 'center',
             alignItems: 'center'
         }}>
-            <Typography variant="h3">Products</Typography>
+            <Typography variant="h3">Profile</Typography>
         </Box>
     );
 };
 
-export default FAQ;
+export default Profile;

@@ -1,7 +1,8 @@
 import Home from "./pages/Home";
 import About from "./pages/About";
-import FAQ from "./pages/FAQ";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import {FC} from "react";
 import FileUploadPage from "./pages/FileUploadPage";
 
@@ -29,11 +30,11 @@ export const routes: Array<Route> = [
         component: About
     },
     {
-        key: 'FAQ-route',
-        title: 'Products',
-        path: '/products',
+        key: 'profile-route',
+        title: 'Profile',
+        path: '/profile',
         enabled: true,
-        component: FAQ
+        component: Profile
     },
     {
         key: 'file_upload-route',
@@ -48,5 +49,12 @@ export const routes: Array<Route> = [
         path: '/login',
         enabled: true,
         component: Login
+    },
+    {
+        key: 'register-route',
+        title: 'Register',
+        path: '/register',
+        enabled: true,
+        component: Register
     }
 ]

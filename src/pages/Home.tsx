@@ -19,7 +19,7 @@ const Home: FC<any> = (): ReactElement => {
                 Traditional paper-based document signing processes are often time-consuming, costly, and environmentally unsustainable. Moreover, the rise of remote work and the need for contactless transactions have accelerated the demand for reliable digital signature solutions. Existing digital signing platforms may lack robust security measures or fail to provide a pleasant user experience. Moreover, all of them require a paid account in order to sign documents digitally.
             </Typography>
 
-            <Button type="submit" variant="contained" component= {Link} to="./Login"
+            <Button type="submit" variant="contained" component= {Link} to="./Register"
                 sx={{
                     my: "1rem", 
                     color: "primary.contrastText", 

@@ -15,21 +15,22 @@ import {
   Grid,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { Link } from "react-router-dom"
 
 interface State {
   email: string;
   password: string;
   showPassword: boolean;
+  nickname: string;
 }
 
-const Login: FC = (): ReactElement => {
+const Register: FC = (): ReactElement => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
   const [formState, setFormState] = useState<State>({
     email: "",
     password: "",
     showPassword: false,
+    nickname: "",
   });
 
   const handleChange = (prop: keyof State, value: string | boolean): void => {
@@ -49,7 +50,7 @@ const Login: FC = (): ReactElement => {
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/v1/user/signin', {
+      const response = await fetch('http://localhost:3001/api/v1/user/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,6 +58,7 @@ const Login: FC = (): ReactElement => {
         body: JSON.stringify({
           email: formState.email,
           password: formState.password,
+          nickname: formState.nickname,
         }),
       });
 
@@ -65,45 +67,57 @@ const Login: FC = (): ReactElement => {
         const authToken = data.token;
         
         localStorage.setItem('token', authToken);
-        console.log("Success!!");
+        console.log("Registration successful!");
         setIsLoggedIn(true);
 
       } else {
-        // Handle login failure, show an error message, etc.
+        // Handle registration failure, show an error message, etc.
       }
     } catch (error) {
       // Handle network or server errors.
     }
   };
+  
+    const checkUserAccount = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/v1/user/signup', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+          },
+        });
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, 
-        },
-      });
-
-      if (response.ok) {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-      } else {
+        if (response.ok) {
+          // User has an account, redirect to login page
+          
+        } else {
+            const response = await fetch('http://localhost:3001/api/v1/user/signup', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: formState.email,
+                  password: formState.password,
+                  nickname: formState.nickname,
+                }),
+              });
         
-      }
-    } catch (error) {
-      
-    }
-  };
+              if (response.ok) {
+                const data = await response.json();
+                const authToken = data.token;
+                
+                localStorage.setItem('token', authToken);
+                console.log("Registration successful!");
+                setIsLoggedIn(true);
+              }
+            }
+        } catch (error) {
+          // Handle network or server errors.
+        }
+      };
 
   return (
-    <div>
-      {isLoggedIn ? (
-        <div>
-          <h1>Welcome, User!</h1>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      ) : (
         <Container fixed maxWidth="sm" sx ={{ padding: "20px"}}>
           <Box
             sx={{
@@ -123,11 +137,34 @@ const Login: FC = (): ReactElement => {
             }}
           >
             <Box sx={{ mx: "auto", my: "0.5rem", alignItems: "left", justifyContent: "left" }}>
-              <h1>Log In</h1>
+              <h1>Register</h1>
             </Box>
 
             <form onSubmit={handleFormSubmit}>
               <Grid container spacing={2} justifyContent="center" >
+                
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    label="Nickname"
+                    type="text"
+                    autoComplete="Nickname"
+                    fullWidth
+                    sx={{
+                        bgcolor: "primary.contrastText",
+                        borderRadius: "0.3rem",
+                    }}
+                    value={formState.nickname}
+                    onChange={(e) => handleChange("nickname", e.target.value)}
+                    InputLabelProps={{
+                      style: { color: "primary.contrastText" },
+                    }}
+                    InputProps={{
+                      style: { color: "primary.contrastText" },
+                    }}
+                  />
+                </Grid>
+                
                 <Grid item xs={12}>
                   <TextField
                     variant="outlined"
@@ -201,24 +238,15 @@ const Login: FC = (): ReactElement => {
                   </FormGroup>
                 </Grid>
 
-                <Grid item xs={12}>
-                  {localStorage.getItem('token') ? (
-                    <Button onClick={handleLogout} variant="contained" fullWidth>
-                      Logout
+                <Grid item xs={12} >            
+                    <Button type="submit" variant="contained" fullWidth>
+                      Register
                     </Button>
-                  ) : (
-                    <Button type="submit" variant="contained" fullWidth component= {Link} to="./Home">
-                      Log In
-                    </Button>
-                  )}
                 </Grid>
               </Grid>
             </form>
           </Box>
         </Container>
       )}
-    </div>
-  );
-};
 
-export default Login;
+export default Register;
