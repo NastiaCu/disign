@@ -104,27 +104,30 @@ const Navbar: FC = (): ReactElement => {
                 marginLeft: "1rem",
               }}
             >
-              {routes.map((page) => (
-                <Button
-                sx={{
-                    borderRadius: '2rem',
-                    '&:hover': {
-                      backgroundColor: '#7C81AD',
-                      opacity: [0.9, 0.8, 0.7],
-                    },
-                  }}>
-                    <Link
+              {routes
+                .filter((page) => page.key !== 'login-route' && page.key !== 'register-route')
+                .map((page) => (
+                  <Button
                     key={page.key}
-                    component={NavLink}
-                    to={page.path}
-                    color="primary.contrastText"
-                    underline="none"
-                    variant="button"
+                    sx={{
+                      borderRadius: '2rem',
+                      '&:hover': {
+                        backgroundColor: '#7C81AD',
+                        opacity: [0.9, 0.8, 0.7],
+                      },
+                    }}
+                  >
+                    <Link
+                      component={NavLink}
+                      to={page.path}
+                      color="primary.contrastText"
+                      underline="none"
+                      variant="button"
                     >
-                    {page.title}
+                      {page.title}
                     </Link>
-                </Button>
-              ))}
+                  </Button>
+                ))}
             </Box>
           </Box>
         </Toolbar>

@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, useState } from "react";
+import React, { FC, ReactElement, useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -25,13 +25,18 @@ interface State {
 
 const Register: FC = (): ReactElement => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-
   const [formState, setFormState] = useState<State>({
     email: "",
     password: "",
     showPassword: false,
     name: "",
   });
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      window.location.href = '/file_upload'; 
+    }
+  }, [isLoggedIn]);
 
   const handleChange = (prop: keyof State, value: string | boolean): void => {
     setFormState({ ...formState, [prop]: value });

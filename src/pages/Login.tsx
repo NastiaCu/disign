@@ -78,21 +78,13 @@ const Login: FC = (): ReactElement => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, 
-        },
-      });
-
-      if (response.ok) {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-      } else {
-        
-      }
-    } catch (error) {
       
+      localStorage.removeItem('token');
+      setIsLoggedIn(false);
+      
+      window.location.href = '/login'; 
+    } catch (error) {
+      // Handle errors if necessary
     }
   };
 
@@ -101,8 +93,12 @@ const Login: FC = (): ReactElement => {
       {isLoggedIn ? (
         <div>
           <h1>Welcome, User!</h1>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
+          <h1>User Profile</h1>
+          <p>Email: {formState.email}</p>
+        <Button onClick={handleLogout} variant="contained">
+          Logout
+        </Button>
+      </div>
       ) : (
         <Container fixed maxWidth="sm" sx ={{ padding: "20px"}}>
           <Box
@@ -207,8 +203,10 @@ const Login: FC = (): ReactElement => {
                       Logout
                     </Button>
                   ) : (
-                    <Button type="submit" variant="contained" fullWidth component= {Link} to="./Home">
-                      Log In
+                    <Button type="submit" variant="contained" fullWidth>
+                      <Link to="/home" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Log In
+                      </Link>
                     </Button>
                   )}
                 </Grid>
