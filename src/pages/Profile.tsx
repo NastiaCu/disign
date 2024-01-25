@@ -20,9 +20,11 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/v1/user/signup', {
+        const response = await fetch('http://localhost:3001/api/v1/user/private_data', {
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
         });
 
@@ -54,10 +56,10 @@ const Profile = () => {
   const handleImageUpload = async () => {
     if (imageFile) {
       const formData = new FormData();
-      formData.append('profileImage', imageFile);
+      formData.append('file', imageFile);
 
       try {
-        const response = await fetch('http://localhost:3001/api/v1/user/upload-image', {
+        const response = await fetch('http://localhost:3001/api/v1/data/signature', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -70,7 +72,7 @@ const Profile = () => {
           setImageFile(null);
           setImagePreview(null);
         } else {
-          console.error('Image upload failed');
+          console.error(`Image upload failed, reason ${response.json()}`);
         }
       } catch (error) {
         console.error('Error during image upload', error);
@@ -88,10 +90,10 @@ const Profile = () => {
   const handlePfxUpload = async () => {
     if (pfxFile) {
       const formData = new FormData();
-      formData.append('pfxFile', pfxFile);
+      formData.append('file', pfxFile);
 
       try {
-        const response = await fetch('http://localhost:3001/api/v1/user/upload-pfx', {
+        const response = await fetch('http://localhost:3001/api/v1/data/certificate', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -113,7 +115,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/login'; 
+    window.location.href = '/login';
   };
 
   return (

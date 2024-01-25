@@ -1,272 +1,179 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import { pageNavigationPlugin, RenderCurrentPageLabelProps } from '@react-pdf-viewer/page-navigation';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import TextField from '@mui/material/TextField';
-import Alert from '@mui/material/Alert';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { useDropzone } from 'react-dropzone';
+import { PDFDocument } from 'pdf-lib';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-const FileUploadPage: React.FC = () => {
-  const [pdfFile, setPdfFile] = useState<string | null>(null);
-  const [pdfFileError, setPdfFileError] = useState<string>('');
-  const pageNavigationPluginInstance = pageNavigationPlugin()
-  const { CurrentPageLabel } = pageNavigationPluginInstance;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
+interface PdfUploaderProps {}
 
-  const [viewPdf, setViewPdf] = useState<string | null>(null);
+const PdfUploader: React.FC<PdfUploaderProps> = () => {
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfNumPages, setPdfNumPages] = useState<number | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfWithImage, setPdfWithImage] = useState<Uint8Array | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
 
-  const fileType = ['application/pdf'];
+  const memoizedFile = useMemo(() => ({ data: pdfWithImage }), [pdfWithImage]);
 
-  const handlePdfFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let selectedFile = e.target.files && e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile && fileType.includes(selectedFile.type)) {
-        let reader = new FileReader();
-        reader.readAsDataURL(selectedFile);
-        reader.onloadend = (event: ProgressEvent<FileReader>) => {
-          if (event.target) {
-            setPdfFile(event.target.result as string);
-            setPdfFileError('');
-          }
-        };
-      } else {
-        setPdfFile(null);
-        setPdfFileError('Please select a valid pdf file');
-      }
+  const onDrop = async (acceptedFiles: File[]) => {
+    const pdfFile = acceptedFiles.find(file => file.type === 'application/pdf');
+    if (pdfFile) {
+      setPdfFile(pdfFile);
+      setPdfNumPages(null);
+      setPdfWithImage(null); // Reset modified PDF when a new PDF is uploaded
     } else {
-      console.log('Select your file');
+      alert('Please upload a valid PDF file.');
     }
   };
 
-  const handlePdfFileSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (pdfFile !== null) {
-      setViewPdf(pdfFile);
-    } else {
-      setViewPdf(null);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setMousePosition(null); // Reset mouse position when a new image is uploaded
     }
+  };
+
+  const handleDocumentMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (imageFile && documentRef.current) {
+      const rect = documentRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setMousePosition({ x, y });
+    }
+  };
+
+  const addImageToPdf = async () => {
+    if (pdfFile && imageFile && mousePosition) {
+      try {
+        const pdfBytes = await pdfFile.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+
+        // Get the rendered pages
+        const renderedPages = document.querySelectorAll('.react-pdf__Page');
+
+        // Find the page based on the mouse position
+        const pageIndex = Array.from(renderedPages).findIndex((page) => {
+          const rect = page.getBoundingClientRect();
+          return (
+            mousePosition.x >= rect.left &&
+            mousePosition.x <= rect.right &&
+            mousePosition.y >= rect.top &&
+            mousePosition.y <= rect.bottom
+          );
+        });
+
+        // If a valid page index is found, add the image to that page
+        if (pageIndex !== -1) {
+          const imageBytes = await imageFile.arrayBuffer();
+          const image = await pdfDoc.embedJpg(imageBytes);
+
+          const selectedPage = pdfDoc.getPage(pageIndex); // Note: Page indexes are 0-based
+          const { width, height } = await selectedPage.getSize();
+          selectedPage.drawImage(image, {
+            x: mousePosition.x,
+            y: mousePosition.y - 0.5 * image.height, // Adjust the y-coordinate
+            width: image.width,
+            height: image.height,
+          });
+
+          const modifiedPdfBytes = await pdfDoc.save();
+          setPdfWithImage(modifiedPdfBytes); // Update modified PDF bytes
+          setPdfFile(new File([modifiedPdfBytes], pdfFile.name)); // Update PDF file with modified bytes
+
+          // Refresh PDF preview by resetting the number of pages
+          setPdfNumPages(null);
+          setMousePosition(null); // Reset mouse position after adding the image
+        } else {
+          alert('Please select a valid position on the PDF.');
+        }
+      } catch (error) {
+        console.error('Error adding image to PDF:', error);
+      }
+    } else {
+      alert('Please upload both a PDF file, an image file, and select a position on the PDF.');
+    }
+  };
+
+  useEffect(() => {
+    if (documentRef.current && documentRef.current.firstChild) {
+      const firstPage = documentRef.current.firstChild as HTMLElement;
+      setPreviewWidth(firstPage.offsetWidth);
+    }
+  }, [pdfNumPages]);
+
+  const dropzoneStyles: React.CSSProperties = {
+    border: '2px dashed #cccccc',
+    borderRadius: '4px',
+    padding: '20px',
+    textAlign: 'center',
+    cursor: 'pointer',
+    margin: '20px 0',
+  };
+
+  const pdfPreviewContainerStyles: React.CSSProperties = {
+    border: '1px solid #cccccc',
+    margin: '10px 0',
+    width: previewWidth ? `${previewWidth}px` : '100%', // Set the width dynamically
   };
 
   return (
-    <Container maxWidth="md">
-      <br />
-      <form onSubmit={handlePdfFileSubmit}>
-        <TextField
-          type="file"
-          variant="outlined"
-          required
-          fullWidth
-          onChange={handlePdfFileChange}
-        />
-        {pdfFileError && <Alert severity="error">{pdfFileError}</Alert>}
-        <br />
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-        >
-          Upload Document
-        </Button>
-      </form>
-      <br />
-
-      <div className="pdf-container"
-            style={{
-                border: '1px solid rgba(0, 0, 0, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                // height: '100%',
-            }}
-        >
-            <div
-                style={{
-                    alignItems: 'center',
-                    backgroundColor: '#eeeeee',
-                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    padding: '8px',
-                }}
-            >
-                <CurrentPageLabel>
-                    {(props: RenderCurrentPageLabelProps) => (
-                        <span>{`${props.currentPage + 1} of ${props.numberOfPages}`}</span>
-                    )}
-                </CurrentPageLabel>
-            </div>
-            <div
-                style={{
-                    flex: 1,
-                    overflow: 'hidden',
-                }}
-            >
-              {viewPdf && (
-                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <div className="viewer-wrapper">
-                <Viewer fileUrl={viewPdf} plugins={[pageNavigationPluginInstance]} />
-                </div>
-              </Worker>
-            )}
-        {!viewPdf && <>No pdf file selected</>}
-            </div>
+    <div>
+      <div {...getRootProps()} style={dropzoneStyles}>
+        <input {...getInputProps()} />
+        {isDragActive ? <p>Drop the PDF file here...</p> : <p>Drag 'n' drop a PDF file here, or click to select one</p>}
       </div>
-    </Container>
+
+      {pdfFile && (
+        <div
+          className="pdf-preview-container"
+          style={pdfPreviewContainerStyles}
+          onMouseDown={handleDocumentMouseDown}
+          ref={documentRef}
+        >
+          <div style={{ height: '400px', overflowY: 'auto' }}>
+            <Document
+              file={pdfFile}
+              onLoadSuccess={({ numPages }) => {
+                console.log('Original PDF loaded successfully. Number of pages:', numPages);
+                setPdfNumPages(numPages);
+              }}
+            >
+              {Array.from(new Array(pdfNumPages || 0), (el, index) => (
+                <React.Fragment key={`page_${index + 1}`}>
+                  <div style={{ border: '1px solid #cccccc', marginBottom: '10px' }}>
+                    <Page pageNumber={index + 1} />
+                  </div>
+                </React.Fragment>
+              ))}
+            </Document>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="imageUpload">Upload Image:</label>
+        <input type="file" id="imageUpload" accept="image/*" onChange={handleImageUpload} />
+      </div>
+
+      {mousePosition && (
+        <p>
+          Image will be inserted at: ({mousePosition.x}, {mousePosition.y})
+        </p>
+      )}
+
+      <button onClick={addImageToPdf} disabled={!pdfFile || !imageFile || !mousePosition}>
+        Add Image to PDF
+      </button>
+    </div>
   );
 };
 
-export default FileUploadPage;
-
-
-// import React, { useState, ChangeEvent, FormEvent, useRef, useEffect } from 'react';
-// import { Viewer, Worker, SpecialZoomLevel } from '@react-pdf-viewer/core';
-// import { pageNavigationPlugin, RenderCurrentPageLabelProps } from '@react-pdf-viewer/page-navigation';
-// import '@react-pdf-viewer/core/lib/styles/index.css';
-// import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-// import Button from '@mui/material/Button';
-// import Container from '@mui/material/Container';
-// import TextField from '@mui/material/TextField';
-// import Alert from '@mui/material/Alert';
-
-// const FileUploadPage: React.FC = () => {
-//   const [pdfFile, setPdfFile] = useState<string | null>(null);
-//   const [pdfFileError, setPdfFileError] = useState<string>('');
-//   const pageNavigationPluginInstance = pageNavigationPlugin();
-//   const { CurrentPageLabel } = pageNavigationPluginInstance;
-//   const [viewPdf, setViewPdf] = useState<string | null>(null);
-//   const canvasRef = useRef<HTMLCanvasElement>(null);
-//   const [isDrawing, setIsDrawing] = useState(false);
-//   const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
-//   const [endCoords, setEndCoords] = useState({ x: 0, y: 0 });
-
-//   const fileType = ['application/pdf'];
-
-//   const handlePdfFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-//     const selectedFile = e.target.files && e.target.files[0];
-//     if (selectedFile) {
-//       if (selectedFile && fileType.includes(selectedFile.type)) {
-//         let reader = new FileReader();
-//         reader.readAsDataURL(selectedFile);
-//         reader.onloadend = (event: ProgressEvent<FileReader>) => {
-//           if (event.target) {
-//             setPdfFile(event.target.result as string);
-//             setPdfFileError('');
-//           }
-//         };
-//       } else {
-//         setPdfFile(null);
-//         setPdfFileError('Please select a valid pdf file');
-//       }
-//     } else {
-//       console.log('Select your file');
-//     }
-//   };
-
-//   const handlePdfFileSubmit = (e: FormEvent) => {
-//     e.preventDefault();
-//     if (pdfFile !== null) {
-//       setViewPdf(pdfFile);
-//     } else {
-//       setViewPdf(null);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (canvasRef.current) {
-//       const canvas = canvasRef.current;
-//       const context = canvas.getContext('2d');
-//       if (context) {
-//         context.clearRect(0, 0, canvas.width, canvas.height);
-
-//         if (isDrawing) {
-//           context.beginPath();
-//           context.rect(startCoords.x, startCoords.y, endCoords.x - startCoords.x, endCoords.y - startCoords.y);
-//           context.strokeStyle = 'red';
-//           context.lineWidth = 2;
-//           context.stroke();
-//         }
-//       }
-//     }
-//   }, [isDrawing, startCoords, endCoords]);
-
-//   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-//     setIsDrawing(true);
-//     setStartCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
-//   };
-
-//   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-//     if (isDrawing) {
-//       setEndCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
-//     }
-//   };
-
-//   const handleMouseUp = () => {
-//     setIsDrawing(false);
-//   };
-
-//   return (
-//     <Container maxWidth="md">
-//       <br />
-//       <form onSubmit={handlePdfFileSubmit}>
-//         <TextField
-//           type="file"
-//           variant="outlined"
-//           required
-//           fullWidth
-//           onChange={handlePdfFileChange}
-//         />
-//         {pdfFileError && <Alert severity="error">{pdfFileError}</Alert>}
-//         <br />
-//         <Button type="submit" variant="contained" color="primary" fullWidth>
-//           Upload Document
-//         </Button>
-//       </form>
-//       <br />
-
-//       <div className="pdf-container">
-//         <canvas
-//           ref={canvasRef}
-//           onMouseDown={handleMouseDown}
-//           onMouseMove={handleMouseMove}
-//           onMouseUp={handleMouseUp}
-//           style={{
-//             border: '1px solid rgba(0, 0, 0, 0.3)',
-//           }}
-//         />
-//         {viewPdf && (
-//           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-//             <div className="viewer-wrapper">
-//               <Viewer
-//                 fileUrl={viewPdf}
-//                 plugins={[pageNavigationPluginInstance]}
-//                 defaultScale={SpecialZoomLevel.PageFit}
-//               />
-//             </div>
-//           </Worker>
-//         )}
-//         {!viewPdf && <>No pdf file selected</>}
-//       </div>
-
-//       <div
-//         style={{
-//           alignItems: 'center',
-//           backgroundColor: '#eeeeee',
-//           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-//           display: 'flex',
-//           justifyContent: 'center',
-//           padding: '8px',
-//         }}
-//       >
-//         <CurrentPageLabel>
-//           {(props: RenderCurrentPageLabelProps) => (
-//             <span>{`${props.currentPage + 1} of ${props.numberOfPages}`}</span>
-//           )}
-//         </CurrentPageLabel>
-//       </div>
-//     </Container>
-//   );
-// };
-
-// export default FileUploadPage;
+export default PdfUploader;
