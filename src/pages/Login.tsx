@@ -15,7 +15,7 @@ import {
   Grid,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 
 interface State {
   email: string;
@@ -78,10 +78,8 @@ const Login: FC = (): ReactElement => {
 
   const handleLogout = async () => {
     try {
-      
       localStorage.removeItem('token');
       setIsLoggedIn(false);
-      
       window.location.href = '/login'; 
     } catch (error) {
       // Handle errors if necessary
@@ -91,16 +89,9 @@ const Login: FC = (): ReactElement => {
   return (
     <div>
       {isLoggedIn ? (
-        <div>
-          <h1>Welcome, User!</h1>
-          <h1>User Profile</h1>
-          <p>Email: {formState.email}</p>
-        <Button onClick={handleLogout} variant="contained">
-          Logout
-        </Button>
-      </div>
+        window.location.href = '/profile' 
       ) : (
-        <Container fixed maxWidth="sm" sx ={{ padding: "20px"}}>
+        <Container fixed maxWidth="sm" sx={{ padding: "20px" }}>
           <Box
             sx={{
               mt: "10px",

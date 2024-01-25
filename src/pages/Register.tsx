@@ -94,14 +94,15 @@ const Register: FC = (): ReactElement => {
 
   const handleVerifyOTP = async (otp: string) => {
     try {
-      const response = await fetch('http://localhost:3001/api/v1/user/verify-otp', {
+      const response = await fetch('http://localhost:3001/api/v1/otp/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          otp,
+          email: formState.email,
+          otp: otp,
         }),
       });
 
@@ -112,6 +113,8 @@ const Register: FC = (): ReactElement => {
         setOTPPopupOpen(false);
 
         setIsRegistered(true);
+
+        setIsLoggedIn(false);
 
         window.location.href = '/login';
 
@@ -141,10 +144,24 @@ const Register: FC = (): ReactElement => {
         });
 
         if (response.ok) {
+
+          const response = await fetch('http://localhost:3001/api/v1/otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formState.email,
+            subject: "Email verification",
+            message: "Verify your email with the code below",
+            duration: 1
+          })
+        })
+
           const data = await response.json();
           const authToken = data.token;
 
-          localStorage.setItem('token', authToken);
+          // localStorage.setItem('token', authToken);
           console.log("Registration successful!");
           setIsLoggedIn(true);
           setOTPPopupOpen(true);

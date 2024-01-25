@@ -15,6 +15,8 @@ const Profile = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [pfxFile, setPfxFile] = useState<File | null>(null);
 
+  
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -109,6 +111,11 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login'; 
+  };
+
   return (
     <div>
       <h1>User Profile</h1>
@@ -128,6 +135,10 @@ const Profile = () => {
       <div>
         <input type="file" accept=".pfx" onChange={handlePfxChange} />
         <button onClick={handlePfxUpload}>Upload .pfx File</button>
+      </div>
+
+      <div>
+        <button onClick={handleLogout}>Logout</button>
       </div>
     </div>
   );
