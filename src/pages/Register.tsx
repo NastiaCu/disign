@@ -12,6 +12,7 @@ import {
   Grid,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import OTPPopup from "./OTPPopup"; 
 
 interface State {
   email: string;
@@ -21,6 +22,7 @@ interface State {
 }
 
 const Register: FC = (): ReactElement => {
+  const [isRegistered, setIsRegistered] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [formState, setFormState] = useState<State>({
     email: "",
@@ -30,6 +32,9 @@ const Register: FC = (): ReactElement => {
   });
 
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [otpPopupOpen, setOTPPopupOpen] = useState(false);
+  const [otpVerified, setOTPVerified] = useState(false);
+  const [otp, setOtp] = useState(""); 
 
   const validate = (value: string) => {
     const errors: string[] = [];
@@ -58,10 +63,12 @@ const Register: FC = (): ReactElement => {
   };
   
   useEffect(() => {
-    if (isLoggedIn) {
-      window.location.href = '/file_upload';
+    console.log('isRegistered changed:', isRegistered);
+
+    if (isRegistered) {
+      setOTPPopupOpen(true);
     }
-  }, [isLoggedIn]);
+  }, [isRegistered]);
 
   const handleChange = (prop: keyof State, value: string | boolean): void => {
     if (prop === "password") {
@@ -79,6 +86,42 @@ const Register: FC = (): ReactElement => {
     event: React.MouseEvent<HTMLButtonElement>
   ): void => {
     event.preventDefault();
+  };
+
+  const resetOtp = () => {
+    setOtp("");
+  };
+
+  const handleVerifyOTP = async (otp: string) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/v1/user/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          otp,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("OTP verified successfully!");
+        setOTPVerified(true);
+
+        setOTPPopupOpen(false);
+
+        setIsRegistered(true);
+
+        window.location.href = '/login';
+
+        resetOtp();
+      } else {
+        console.error("OTP verification failed");
+      }
+    } catch (error) {
+      console.error("Error during OTP verification", error);
+    }
   };
 
   const handleFormSubmit = async (event: React.FormEvent) => {
@@ -104,6 +147,7 @@ const Register: FC = (): ReactElement => {
           localStorage.setItem('token', authToken);
           console.log("Registration successful!");
           setIsLoggedIn(true);
+          setOTPPopupOpen(true);
 
         } else {
           // Handle registration failure, show an error message, etc.
@@ -191,7 +235,6 @@ const Register: FC = (): ReactElement => {
               />
             </Grid>
 
-
             <Grid item xs={12}>
               <TextField
                 variant="filled"
@@ -202,7 +245,7 @@ const Register: FC = (): ReactElement => {
                   bgcolor: "primary.contrastText",
                   borderRadius: "0.3rem",
                   '& input': {
-                    paddingBottom: '14px', // Adjust padding as needed
+                    paddingBottom: '14px', 
                     verticalAlign: formState.password ? 'baseline' : 'middle',
                   },
                 }}
@@ -235,7 +278,6 @@ const Register: FC = (): ReactElement => {
               ))}
             </Grid>
 
-
             <Grid item xs={12}>
               <FormGroup>
                 <FormControlLabel
@@ -258,6 +300,15 @@ const Register: FC = (): ReactElement => {
             </Grid>
           </Grid>
         </form>
+
+        <OTPPopup
+          open={otpPopupOpen}
+          onClose={() => {
+            setOTPPopupOpen(false);
+            resetOtp(); 
+          }}
+          onVerifyOTP={handleVerifyOTP}
+        />
       </Box>
     </Container>
   );
