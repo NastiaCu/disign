@@ -117,7 +117,7 @@ const Login: FC = (): ReactElement => {
               <Grid container spacing={2} justifyContent="center" >
                 <Grid item xs={12}>
                   <TextField
-                    variant="outlined"
+                    variant="filled"
                     label="Email"
                     type="text"
                     autoComplete="Email"
@@ -139,25 +139,28 @@ const Login: FC = (): ReactElement => {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <FormControl 
-                    variant="outlined" 
-                    fullWidth 
+                  <TextField
+                    variant="filled"
+                    label="Password"
+                    type={formState.showPassword ? "text" : "password"}
+                    fullWidth
                     sx={{
                       bgcolor: "primary.contrastText",
                       borderRadius: "0.3rem",
+                      '& input': {
+                        paddingBottom: '14px', 
+                        verticalAlign: formState.password ? 'baseline' : 'middle',
+                      },
                     }}
-                  >
-                    <InputLabel htmlFor="outlined-adornment-password" style={{ color: "primary.contrastText" }}>
-                      Password
-                    </InputLabel>
-                    <OutlinedInput
-                      label="Password"
-                      id="outlined-adornment-password"
-                      type={formState.showPassword ? "text" : "password"}
-                      value={formState.password}
-                      onChange={(e) => handleChange("password", e.target.value)}
-                      endAdornment={
-                        <InputAdornment position="end">
+                    value={formState.password}
+                    onChange={(e) => handleChange("password", e.target.value)}
+                    InputLabelProps={{
+                      style: { color: "primary.contrastText" },
+                    }}
+                    InputProps={{
+                      style: { color: "primary.contrastText" },
+                      endAdornment: (
+                        <InputAdornment position="end" sx={{ marginTop: "0.5rem" }}>
                           <IconButton
                             style={{ color: "primary.main" }}
                             aria-label="toggle password visibility"
@@ -168,9 +171,9 @@ const Login: FC = (): ReactElement => {
                             {formState.showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
-                      }
-                    />
-                  </FormControl>
+                      ),
+                    }}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
